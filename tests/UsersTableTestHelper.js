@@ -1,5 +1,5 @@
 /* istanbul ignore file */
-const pool = require('../src/infrastructures/database/postgres/pool');
+const pool = require('../src/infrastructure/database/postgres/pool');
 
 const UsersTableTestHelper = {
   async addUser({
