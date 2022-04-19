@@ -7,11 +7,16 @@
     "start": "node src/app.js",
     "start:dev": "nodemon src/app.js",
     "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix && npm run format",
+    "lint:strict": "eslint --max-warnings=0 ./src",
+    "format": "prettier -w .",
+    "format:check": "prettier -c .",
     "test": "jest --setupFiles dotenv/config -i",
     "test:watch": "jest --watch --setupFiles dotenv/config -i",
     "test:coverage": "jest --watchAll --coverage --setupFiles dotenv/config -i",
     "migrate": "node-pg-migrate",
-    "migrate:test": "node-pg-migrate -f config/database/test.json"
+    "migrate:test": "node-pg-migrate -f config/database/test.json",
+    "prepare": "husky install"
   },
   "keywords": [],
   "author": "",
@@ -26,13 +31,24 @@
     "pg": "^8.7.3"
   },
   "devDependencies": {
+    "@commitlint/cli": "^16.2.3",
+    "@commitlint/config-conventional": "^16.2.1",
     "@types/jest": "^27.4.1",
     "eslint": "^8.13.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",
+    "husky": "^7.0.0",
     "jest": "^27.5.1",
+    "lint-staged": "^12.3.8",
     "node-pg-migrate": "^6.2.1",
-    "nodemon": "^2.0.15"
+    "nodemon": "^2.0.15",
+    "prettier": "^2.6.2"
+  },
+  "lint-staged": {
+    "src/**/*.js": [
+      "eslint --max-warnings=0",
+      "prettier -w"
+    ]
   }
 }
