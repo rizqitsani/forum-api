@@ -1,5 +1,5 @@
-const ClientError = require('../ClientError');
 const AuthorizationError = require('../AuthorizationError');
+const ClientError = require('../ClientError');
 
 describe('AuthorizationError', () => {
   it('should create AuthorizationError correctly', () => {
