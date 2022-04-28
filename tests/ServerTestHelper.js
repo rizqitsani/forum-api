@@ -50,6 +50,30 @@ const ServerTestHelper = {
 
     return id;
   },
+
+  async addComment(server, token, threadId) {
+    const requestCommentPayload = {
+      content: 'Lorem ipsum dolor sit amet',
+    };
+
+    const addCommentResponse = await server.inject({
+      method: 'POST',
+      url: `/threads/${threadId}/comments`,
+      payload: requestCommentPayload,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const {
+      data: {
+        addedComment: { id },
+      },
+    } = JSON.parse(addCommentResponse.payload);
+
+    return id;
+  },
 };
 
 module.exports = ServerTestHelper;
