@@ -11,7 +11,7 @@ describe('JwtTokenManager', () => {
         username: 'dicoding',
       };
       const mockJwtToken = {
-        generate: jest.fn().mockImplementation(() => 'mock_token'),
+        generate: jest.fn(() => 'mock_token'),
       };
       const jwtTokenManager = new JwtTokenManager(mockJwtToken);
 
@@ -34,7 +34,7 @@ describe('JwtTokenManager', () => {
         username: 'dicoding',
       };
       const mockJwtToken = {
-        generate: jest.fn().mockImplementation(() => 'mock_token'),
+        generate: jest.fn(() => 'mock_token'),
       };
       const jwtTokenManager = new JwtTokenManager(mockJwtToken);
 

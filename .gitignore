@@ -3,3 +3,4 @@
 .env.prod
 
 /config/database/test.json
+/coverage
