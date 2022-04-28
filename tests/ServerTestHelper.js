@@ -1,0 +1,55 @@
+const ServerTestHelper = {
+  async getAccessToken(server) {
+    // register user
+    await server.inject({
+      method: 'POST',
+      url: '/users',
+      payload: {
+        username: 'dicoding',
+        password: 'secret',
+        fullname: 'Dicoding Indonesia',
+      },
+    });
+
+    const loginResponse = await server.inject({
+      method: 'POST',
+      url: '/authentications',
+      payload: {
+        username: 'dicoding',
+        password: 'secret',
+      },
+    });
+    const {
+      data: { accessToken },
+    } = JSON.parse(loginResponse.payload);
+
+    return accessToken;
+  },
+
+  async addThread(server, token) {
+    const requestThreadPayload = {
+      title: 'Dicoding Indonesia',
+      body: 'Lorem ipsum dolor sit amet',
+    };
+
+    const addThreadResponse = await server.inject({
+      method: 'POST',
+      url: '/threads',
+      payload: requestThreadPayload,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const {
+      data: {
+        addedThread: { id },
+      },
+    } = JSON.parse(addThreadResponse.payload);
+
+    return id;
+  },
+};
+
+module.exports = ServerTestHelper;
