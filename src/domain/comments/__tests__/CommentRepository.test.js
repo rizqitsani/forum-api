@@ -15,6 +15,9 @@ describe('CommentRepository interface', () => {
     await expect(commentRepository.getCommentById('')).rejects.toThrowError(
       'THREAD_REPOSITORY.METHOD_NOT_IMPLEMENTED',
     );
+    await expect(
+      commentRepository.getCommentsByThreadId(''),
+    ).rejects.toThrowError('THREAD_REPOSITORY.METHOD_NOT_IMPLEMENTED');
     await expect(commentRepository.getCommentOwner('')).rejects.toThrowError(
       'THREAD_REPOSITORY.METHOD_NOT_IMPLEMENTED',
     );

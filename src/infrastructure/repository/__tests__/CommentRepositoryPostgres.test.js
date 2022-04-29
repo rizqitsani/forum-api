@@ -207,6 +207,39 @@ describe('CommentRepositoryPostgres', () => {
     });
   });
 
+  describe('getCommentsByThreadId function', () => {
+    it('should return comment data when it is found', async () => {
+      // Arrange
+      const threadId = 'thread-123';
+      const commentId = 'comment-123';
+
+      await UsersTableTestHelper.addUser({});
+      await ThreadsTableTestHelper.addThread({ id: threadId });
+      await CommentsTableTestHelper.addComment({ id: commentId });
+      const expectedComment = (
+        await CommentsTableTestHelper.findCommentsById(commentId)
+      )[0];
+
+      const commentRepositoryPostgres = new CommentRepositoryPostgres(pool, {});
+
+      // Action
+      const comment = await commentRepositoryPostgres.getCommentsByThreadId(
+        threadId,
+      );
+
+      // Assert
+      expect(comment).toHaveLength(1);
+      expect(comment[0]).toBeInstanceOf(Comment);
+      expect(comment[0].id).toBe(expectedComment.id);
+      expect(comment[0].title).toBe(expectedComment.title);
+      expect(comment[0].body).toBe(expectedComment.body);
+      expect(comment[0].date).toBe(
+        new Date(expectedComment.date).toISOString(),
+      );
+      expect(comment[0].username).toBe('dicoding');
+    });
+  });
+
   describe('getCommentOwner function', () => {
     it('should throw NotFoundError when comment is not found', async () => {
       // Arrange

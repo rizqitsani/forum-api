@@ -1,4 +1,5 @@
 const AuthenticationsTableTestHelper = require('../../../../tests/AuthenticationsTableTestHelper');
+const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelper');
 const ServerTestHelper = require('../../../../tests/ServerTestHelper');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
 const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
@@ -12,6 +13,7 @@ describe('/threads endpoint', () => {
   });
 
   afterEach(async () => {
+    await CommentsTableTestHelper.cleanTable();
     await ThreadsTableTestHelper.cleanTable();
     await UsersTableTestHelper.cleanTable();
     await AuthenticationsTableTestHelper.cleanTable();
@@ -125,6 +127,65 @@ describe('/threads endpoint', () => {
       const responseJson = JSON.parse(response.payload);
       expect(response.statusCode).toEqual(401);
       expect(responseJson.message).toEqual('Missing authentication');
+    });
+  });
+
+  describe('when GET /threads/{threadId}', () => {
+    it('should response 200 and returned thread', async () => {
+      // Arrange
+      const server = await createServer(container);
+
+      const accessToken = await ServerTestHelper.getAccessToken(server);
+
+      const threadId = await ServerTestHelper.addThread(server, accessToken);
+      const commentId = await ServerTestHelper.addComment(
+        server,
+        accessToken,
+        threadId,
+      );
+
+      // Action
+      const response = await server.inject({
+        method: 'GET',
+        url: `/threads/${threadId}`,
+      });
+
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(200);
+      expect(responseJson.status).toEqual('success');
+      expect(responseJson.data.thread).toBeDefined();
+      expect(responseJson.data.thread.id).toEqual(threadId);
+      expect(responseJson.data.thread.title).toEqual('Dicoding Indonesia');
+      expect(responseJson.data.thread.body).toEqual(
+        'Lorem ipsum dolor sit amet',
+      );
+      expect(responseJson.data.thread.username).toEqual('dicoding');
+      expect(responseJson.data.thread.comments.length).toEqual(1);
+      expect(responseJson.data.thread.comments[0].id).toEqual(commentId);
+    });
+
+    it('should response 404 when thread is not found', async () => {
+      // Arrange
+      const server = await createServer(container);
+
+      const accessToken = await ServerTestHelper.getAccessToken(server);
+      const requestHeader = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      };
+
+      // Action
+      const response = await server.inject({
+        method: 'GET',
+        url: '/threads/asd',
+        headers: requestHeader,
+      });
+
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(404);
+      expect(responseJson.message).toEqual('Thread tidak ditemukan');
     });
   });
 });
