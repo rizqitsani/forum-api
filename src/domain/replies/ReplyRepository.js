@@ -1,0 +1,12 @@
+/* eslint-disable no-unused-vars */
+class ReplyRepository {
+  async addReply(addReply) {
+    throw new Error('THREAD_REPOSITORY.METHOD_NOT_IMPLEMENTED');
+  }
+
+  async getRepliesByCommentId(commentId) {
+    throw new Error('THREAD_REPOSITORY.METHOD_NOT_IMPLEMENTED');
+  }
+}
+
+module.exports = ReplyRepository;

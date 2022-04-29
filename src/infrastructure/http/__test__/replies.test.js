@@ -8,7 +8,7 @@ const container = require('../../container');
 const pool = require('../../database/postgres/pool');
 const createServer = require('../createServer');
 
-describe('/threads endpoint', () => {
+describe('/threads/{threadId}/comments/{commentId}/replies endpoint', () => {
   afterAll(async () => {
     await pool.end();
   });
@@ -21,24 +21,31 @@ describe('/threads endpoint', () => {
     await AuthenticationsTableTestHelper.cleanTable();
   });
 
-  describe('when POST /threads', () => {
-    it('should response 201 and persisted thread', async () => {
+  describe('when POST /threads/{threadId}/comments/{commentId}/replies', () => {
+    it('should response 201 and persisted comment', async () => {
       // Arrange
       const requestPayload = {
-        body: 'Lorem ipsum dolor sit amet',
-        title: 'Dicoding Indonesia',
+        content: 'Lorem ipsum dolor sit amet',
       };
       const server = await createServer(container);
+
       const accessToken = await ServerTestHelper.getAccessToken(server);
       const requestHeader = {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`,
       };
 
+      const threadId = await ServerTestHelper.addThread(server, accessToken);
+      const commentId = await ServerTestHelper.addComment(
+        server,
+        accessToken,
+        threadId,
+      );
+
       // Action
       const response = await server.inject({
         method: 'POST',
-        url: '/threads',
+        url: `/threads/${threadId}/comments/${commentId}/replies`,
         payload: requestPayload,
         headers: requestHeader,
       });
@@ -47,97 +54,22 @@ describe('/threads endpoint', () => {
       const responseJson = JSON.parse(response.payload);
       expect(response.statusCode).toEqual(201);
       expect(responseJson.status).toEqual('success');
-      expect(responseJson.data.addedThread).toBeDefined();
-      expect(responseJson.data.addedThread.title).toEqual(requestPayload.title);
+      expect(responseJson.data.addedReply).toBeDefined();
+      expect(responseJson.data.addedReply.content).toEqual(
+        requestPayload.content,
+      );
     });
 
     it('should response 400 when request payload not contain needed property', async () => {
       // Arrange
-      const requestPayload = {
-        title: 'Dicoding Indonesia',
-      };
+      const requestPayload = {};
       const server = await createServer(container);
+
       const accessToken = await ServerTestHelper.getAccessToken(server);
       const requestHeader = {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${accessToken}`,
       };
-
-      // Action
-      const response = await server.inject({
-        method: 'POST',
-        url: '/threads',
-        payload: requestPayload,
-        headers: requestHeader,
-      });
-
-      // Assert
-      const responseJson = JSON.parse(response.payload);
-      expect(response.statusCode).toEqual(400);
-      expect(responseJson.status).toEqual('fail');
-      expect(responseJson.message).toEqual(
-        'tidak dapat membuat thread baru karena properti yang dibutuhkan tidak ada',
-      );
-    });
-
-    it('should response 400 when request payload not meet data type specification', async () => {
-      // Arrange
-      const requestPayload = {
-        body: 'Lorem ipsum dolor sit amet',
-        title: 123,
-      };
-      const server = await createServer(container);
-      const accessToken = await ServerTestHelper.getAccessToken(server);
-      const requestHeader = {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      };
-
-      // Action
-      const response = await server.inject({
-        method: 'POST',
-        url: '/threads',
-        payload: requestPayload,
-        headers: requestHeader,
-      });
-
-      // Assert
-      const responseJson = JSON.parse(response.payload);
-      expect(response.statusCode).toEqual(400);
-      expect(responseJson.status).toEqual('fail');
-      expect(responseJson.message).toEqual(
-        'tidak dapat membuat thread baru karena tipe data tidak sesuai',
-      );
-    });
-
-    it('should response 401 when missing access token', async () => {
-      // Arrange
-      const requestPayload = {
-        body: 'Lorem ipsum dolor sit amet',
-        title: 'Dicoding Indonesia',
-      };
-      const server = await createServer(container);
-
-      // Action
-      const response = await server.inject({
-        method: 'POST',
-        url: '/threads',
-        payload: requestPayload,
-      });
-
-      // Assert
-      const responseJson = JSON.parse(response.payload);
-      expect(response.statusCode).toEqual(401);
-      expect(responseJson.message).toEqual('Missing authentication');
-    });
-  });
-
-  describe('when GET /threads/{threadId}', () => {
-    it('should response 200 and returned thread', async () => {
-      // Arrange
-      const server = await createServer(container);
-
-      const accessToken = await ServerTestHelper.getAccessToken(server);
 
       const threadId = await ServerTestHelper.addThread(server, accessToken);
       const commentId = await ServerTestHelper.addComment(
@@ -145,40 +77,98 @@ describe('/threads endpoint', () => {
         accessToken,
         threadId,
       );
-      const replyId = await ServerTestHelper.addReply(
-        server,
-        accessToken,
-        threadId,
-        commentId,
-      );
 
       // Action
       const response = await server.inject({
-        method: 'GET',
-        url: `/threads/${threadId}`,
+        method: 'POST',
+        url: `/threads/${threadId}/comments/${commentId}/replies`,
+        payload: requestPayload,
+        headers: requestHeader,
       });
 
       // Assert
       const responseJson = JSON.parse(response.payload);
-      expect(response.statusCode).toEqual(200);
-      expect(responseJson.status).toEqual('success');
-      expect(responseJson.data.thread).toBeDefined();
-      expect(responseJson.data.thread.id).toEqual(threadId);
-      expect(responseJson.data.thread.title).toEqual('Dicoding Indonesia');
-      expect(responseJson.data.thread.body).toEqual(
-        'Lorem ipsum dolor sit amet',
+      expect(response.statusCode).toEqual(400);
+      expect(responseJson.status).toEqual('fail');
+      expect(responseJson.message).toEqual(
+        'tidak dapat membuat balasan baru karena properti yang dibutuhkan tidak ada',
       );
-      expect(responseJson.data.thread.username).toEqual('dicoding');
-      expect(responseJson.data.thread.comments.length).toEqual(1);
-      expect(responseJson.data.thread.comments[0].id).toEqual(commentId);
-      expect(responseJson.data.thread.comments[0].replies.length).toEqual(1);
-      expect(responseJson.data.thread.comments[0].replies[0].id).toEqual(
-        replyId,
+    });
+
+    it('should response 400 when request payload not meet data type specification', async () => {
+      // Arrange
+      const requestPayload = {
+        content: 123,
+      };
+      const server = await createServer(container);
+
+      const accessToken = await ServerTestHelper.getAccessToken(server);
+      const requestHeader = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      };
+
+      const threadId = await ServerTestHelper.addThread(server, accessToken);
+      const commentId = await ServerTestHelper.addComment(
+        server,
+        accessToken,
+        threadId,
       );
+
+      // Action
+      const response = await server.inject({
+        method: 'POST',
+        url: `/threads/${threadId}/comments/${commentId}/replies`,
+        payload: requestPayload,
+        headers: requestHeader,
+      });
+
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(400);
+      expect(responseJson.status).toEqual('fail');
+      expect(responseJson.message).toEqual(
+        'tidak dapat membuat balasan baru karena tipe data tidak sesuai',
+      );
+    });
+
+    it('should response 401 when missing access token', async () => {
+      // Arrange
+      const requestPayload = {
+        content: 'Lorem ipsum dolor sit amet',
+      };
+      const requestHeader = {
+        'Content-Type': 'application/json',
+      };
+      const server = await createServer(container);
+
+      const accessToken = await ServerTestHelper.getAccessToken(server);
+      const threadId = await ServerTestHelper.addThread(server, accessToken);
+      const commentId = await ServerTestHelper.addComment(
+        server,
+        accessToken,
+        threadId,
+      );
+
+      // Action
+      const response = await server.inject({
+        method: 'POST',
+        url: `/threads/${threadId}/comments/${commentId}/replies`,
+        payload: requestPayload,
+        headers: requestHeader,
+      });
+
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(401);
+      expect(responseJson.message).toEqual('Missing authentication');
     });
 
     it('should response 404 when thread is not found', async () => {
       // Arrange
+      const requestPayload = {
+        content: 'Lorem ipsum dolor sit amet',
+      };
       const server = await createServer(container);
 
       const accessToken = await ServerTestHelper.getAccessToken(server);
@@ -189,8 +179,9 @@ describe('/threads endpoint', () => {
 
       // Action
       const response = await server.inject({
-        method: 'GET',
-        url: '/threads/asd',
+        method: 'POST',
+        url: `/threads/asd/comments/asd/replies`,
+        payload: requestPayload,
         headers: requestHeader,
       });
 
@@ -198,6 +189,35 @@ describe('/threads endpoint', () => {
       const responseJson = JSON.parse(response.payload);
       expect(response.statusCode).toEqual(404);
       expect(responseJson.message).toEqual('Thread tidak ditemukan');
+    });
+
+    it('should response 404 when comment is not found', async () => {
+      // Arrange
+      const requestPayload = {
+        content: 'Lorem ipsum dolor sit amet',
+      };
+      const server = await createServer(container);
+
+      const accessToken = await ServerTestHelper.getAccessToken(server);
+      const requestHeader = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      };
+
+      const threadId = await ServerTestHelper.addThread(server, accessToken);
+
+      // Action
+      const response = await server.inject({
+        method: 'POST',
+        url: `/threads/${threadId}/comments/asd/replies`,
+        payload: requestPayload,
+        headers: requestHeader,
+      });
+
+      // Assert
+      const responseJson = JSON.parse(response.payload);
+      expect(response.statusCode).toEqual(404);
+      expect(responseJson.message).toEqual('Komentar tidak ditemukan');
     });
   });
 });
