@@ -9,8 +9,14 @@ describe('CommentRepository interface', () => {
     await expect(replyRepository.addReply({})).rejects.toThrowError(
       'THREAD_REPOSITORY.METHOD_NOT_IMPLEMENTED',
     );
+    await expect(replyRepository.deleteReply({})).rejects.toThrowError(
+      'THREAD_REPOSITORY.METHOD_NOT_IMPLEMENTED',
+    );
     await expect(
       replyRepository.getRepliesByCommentId(''),
     ).rejects.toThrowError('THREAD_REPOSITORY.METHOD_NOT_IMPLEMENTED');
+    await expect(replyRepository.getReplyOwner({})).rejects.toThrowError(
+      'THREAD_REPOSITORY.METHOD_NOT_IMPLEMENTED',
+    );
   });
 });

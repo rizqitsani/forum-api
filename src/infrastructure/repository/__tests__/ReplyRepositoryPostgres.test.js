@@ -4,6 +4,7 @@ const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelp
 const RepliesTableTestHelper = require('../../../../tests/RepliesTableTestHelper');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
 const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
+const NotFoundError = require('../../../common/exceptions/NotFoundError');
 const AddedReply = require('../../../domain/replies/entities/AddedReply');
 const AddReply = require('../../../domain/replies/entities/AddReply');
 const Reply = require('../../../domain/replies/entities/Reply');
@@ -127,6 +128,47 @@ describe('ReplyRepositoryPostgres', () => {
     });
   });
 
+  describe('deleteReply function', () => {
+    it('should soft delete reply correctly', async () => {
+      // Arrange
+      const fakeIdGenerator = () => '123';
+      const replyId = 'reply-123';
+
+      await UsersTableTestHelper.addUser({});
+      await ThreadsTableTestHelper.addThread({});
+      await CommentsTableTestHelper.addComment({});
+      await RepliesTableTestHelper.addReply({ id: replyId });
+
+      const replyRepositoryPostgres = new ReplyRepositoryPostgres(
+        pool,
+        fakeIdGenerator,
+      );
+
+      // Action
+      await replyRepositoryPostgres.deleteReply(replyId);
+      const deletedReply = (
+        await RepliesTableTestHelper.findRepliesById(replyId)
+      )[0];
+
+      // Assert
+      expect(deletedReply.is_deleted).toEqual(true);
+    });
+
+    it('should return error if reply is not found', async () => {
+      // Arrange
+      const fakeIdGenerator = () => '123';
+      const replyRepositoryPostgres = new ReplyRepositoryPostgres(
+        pool,
+        fakeIdGenerator,
+      );
+
+      // Assert
+      expect(replyRepositoryPostgres.deleteReply('reply-123')).rejects.toThrow(
+        NotFoundError,
+      );
+    });
+  });
+
   describe('getRepliesByCommentId function', () => {
     it('should return comment data when it is found', async () => {
       // Arrange
@@ -157,6 +199,36 @@ describe('ReplyRepositoryPostgres', () => {
       expect(replies[0].content).toBe(expectedReply.content);
       expect(replies[0].date).toBe(new Date(expectedReply.date).toISOString());
       expect(replies[0].username).toBe('dicoding');
+    });
+  });
+
+  describe('getReplyOwner function', () => {
+    it('should throw NotFoundError when reply is not found', async () => {
+      // Arrange
+      const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
+
+      // Action and Assert
+      expect(
+        replyRepositoryPostgres.getReplyOwner('reply-123'),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it('should return reply owner when it is found', async () => {
+      // Arrange
+      const replyId = 'reply-123';
+
+      await UsersTableTestHelper.addUser({});
+      await ThreadsTableTestHelper.addThread({});
+      await CommentsTableTestHelper.addComment({});
+      await RepliesTableTestHelper.addReply({ id: replyId });
+
+      const replyRepositoryPostgres = new ReplyRepositoryPostgres(pool, {});
+
+      // Action
+      const replyOwner = await replyRepositoryPostgres.getReplyOwner(replyId);
+
+      // Assert
+      expect(replyOwner).toEqual('user-123');
     });
   });
 });

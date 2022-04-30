@@ -1,3 +1,4 @@
+const NotFoundError = require('../../common/exceptions/NotFoundError');
 const AddedReply = require('../../domain/replies/entities/AddedReply');
 const Reply = require('../../domain/replies/entities/Reply');
 const ReplyRepository = require('../../domain/replies/ReplyRepository');
@@ -22,6 +23,19 @@ class ReplyRepositoryPostgres extends ReplyRepository {
     return new AddedReply({ ...result.rows[0] });
   }
 
+  async deleteReply(replyId) {
+    const query = {
+      text: 'UPDATE replies SET is_deleted = true WHERE id = $1',
+      values: [replyId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Gagal menghapus balasan. Id tidak ditemukan');
+    }
+  }
+
   async getRepliesByCommentId(commentId) {
     const query = {
       text: `SELECT replies.*, users.username FROM replies
@@ -40,6 +54,21 @@ class ReplyRepositoryPostgres extends ReplyRepository {
           date: new Date(reply.date).toISOString(),
         }),
     );
+  }
+
+  async getReplyOwner(replyId) {
+    const query = {
+      text: 'SELECT owner FROM replies WHERE id = $1',
+      values: [replyId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Balasan tidak ditemukan');
+    }
+
+    return result.rows[0].owner;
   }
 }
 
