@@ -1,6 +1,12 @@
 class GetThreadDetailUseCase {
-  constructor({ commentRepository, replyRepository, threadRepository }) {
+  constructor({
+    commentRepository,
+    likeRepository,
+    replyRepository,
+    threadRepository,
+  }) {
     this._commentRepository = commentRepository;
+    this._likeRepository = likeRepository;
     this._replyRepository = replyRepository;
     this._threadRepository = threadRepository;
   }
@@ -17,8 +23,11 @@ class GetThreadDetailUseCase {
           comment.id,
         );
 
+        const likeCount = await this._likeRepository.getLikeCount(comment.id);
+
         return {
           ...comment,
+          likeCount,
           replies,
         };
       }),

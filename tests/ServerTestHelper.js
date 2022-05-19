@@ -98,6 +98,17 @@ const ServerTestHelper = {
 
     return id;
   },
+
+  async addLike(server, token, threadId, commentId) {
+    await server.inject({
+      method: 'PUT',
+      url: `/threads/${threadId}/comments/${commentId}/likes`,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
 };
 
 module.exports = ServerTestHelper;
