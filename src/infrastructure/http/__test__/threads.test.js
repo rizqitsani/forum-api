@@ -1,5 +1,6 @@
 const AuthenticationsTableTestHelper = require('../../../../tests/AuthenticationsTableTestHelper');
 const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelper');
+const LikesTableTestHelper = require('../../../../tests/LikesTableTestHelper');
 const RepliesTableTestHelper = require('../../../../tests/RepliesTableTestHelper');
 const ServerTestHelper = require('../../../../tests/ServerTestHelper');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
@@ -14,6 +15,7 @@ describe('/threads endpoint', () => {
   });
 
   afterEach(async () => {
+    await LikesTableTestHelper.cleanTable();
     await RepliesTableTestHelper.cleanTable();
     await CommentsTableTestHelper.cleanTable();
     await ThreadsTableTestHelper.cleanTable();
@@ -151,6 +153,7 @@ describe('/threads endpoint', () => {
         threadId,
         commentId,
       );
+      await ServerTestHelper.addLike(server, accessToken, threadId, commentId);
 
       // Action
       const response = await server.inject({
@@ -175,6 +178,7 @@ describe('/threads endpoint', () => {
       expect(responseJson.data.thread.comments[0].replies[0].id).toEqual(
         replyId,
       );
+      expect(responseJson.data.thread.comments[0].likeCount).toEqual(1);
     });
 
     it('should response 404 when thread is not found', async () => {

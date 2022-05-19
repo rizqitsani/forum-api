@@ -12,6 +12,9 @@ describe('LikeRepository interface', () => {
     await expect(likeRepository.deleteLike('', '')).rejects.toThrowError(
       'LIKE_REPOSITORY.METHOD_NOT_IMPLEMENTED',
     );
+    await expect(likeRepository.getLikeCount('')).rejects.toThrowError(
+      'LIKE_REPOSITORY.METHOD_NOT_IMPLEMENTED',
+    );
     await expect(likeRepository.verifyLike('', '')).rejects.toThrowError(
       'LIKE_REPOSITORY.METHOD_NOT_IMPLEMENTED',
     );

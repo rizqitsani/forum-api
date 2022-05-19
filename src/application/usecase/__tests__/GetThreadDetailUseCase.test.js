@@ -1,5 +1,6 @@
 const CommentRepository = require('../../../domain/comments/CommentRepository');
 const Comment = require('../../../domain/comments/entities/Comment');
+const LikeRepository = require('../../../domain/likes/LikeRepository');
 const Reply = require('../../../domain/replies/entities/Reply');
 const ReplyRepository = require('../../../domain/replies/ReplyRepository');
 const Thread = require('../../../domain/threads/entities/Thread');
@@ -42,10 +43,14 @@ describe('GetThreadDetailUseCase', () => {
       }),
     ];
 
+    const likeCount = 2;
+
     comments[0].replies = replies;
+    comments[0].likeCount = likeCount;
 
     /** creating dependency of use case */
     const mockCommentRepository = new CommentRepository();
+    const mockLikeRepository = new LikeRepository();
     const mockReplyRepository = new ReplyRepository();
     const mockThreadRepository = new ThreadRepository();
 
@@ -57,10 +62,12 @@ describe('GetThreadDetailUseCase', () => {
     mockReplyRepository.getRepliesByCommentId = jest.fn(() =>
       Promise.resolve(replies),
     );
+    mockLikeRepository.getLikeCount = jest.fn(() => Promise.resolve(likeCount));
 
     /** creating use case instance */
     const getThreadUseCase = new GetThreadDetailUseCase({
       commentRepository: mockCommentRepository,
+      likeRepository: mockLikeRepository,
       replyRepository: mockReplyRepository,
       threadRepository: mockThreadRepository,
     });
@@ -85,5 +92,6 @@ describe('GetThreadDetailUseCase', () => {
     expect(threadDetail.comments).toEqual(comments);
     expect(threadDetail.comments[0].replies.length).toEqual(1);
     expect(threadDetail.comments[0].replies).toStrictEqual(replies);
+    expect(threadDetail.comments[0].likeCount).toEqual(likeCount);
   });
 });
